@@ -1,30 +1,42 @@
 package main
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+)
 
 var (
-	// Subgrid border style (darker)
-	subgridBorder = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("8")) // Dark gray
+	// Add a purple, rectangular border
+	//style = lipgloss.NewStyle().
+	//	BorderStyle(lipgloss.NormalBorder()).
+	//	BorderForeground(lipgloss.Color("63"))
+	tabBorder = lipgloss.Border{
+		Top:         "─",
+		Bottom:      "─",
+		Left:        "│",
+		Right:       "│",
+		TopLeft:     "╭",
+		TopRight:    "╮",
+		BottomLeft:  "┴",
+		BottomRight: "┴",
+	}
+	myCuteBorder = lipgloss.Border{
+		Top:         "._.:*:",
+		Bottom:      "._.:*:",
+		Left:        "|*",
+		Right:       "|*",
+		TopLeft:     "*",
+		TopRight:    "*",
+		BottomLeft:  "*",
+		BottomRight: "*",
+	}
 
-	// Cell border style (lighter)
-	cellBorder = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("7")) // Light gray
+//	anotherStyle = lipgloss.NewStyle().
+//			BorderStyle(lipgloss.RoundedBorder()).
+//			Border(myCuteBorder, true, true, true, true).
+//			Align(lipgloss.Center).Margin(4, 4)
 
-	// Cursor style for the selected cell
-	cursorStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("62")). // Purple
-			Foreground(lipgloss.Color("230")) // Light yellow
-
-	// Fixed cell style (non-editable)
-	fixedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("8")) // Gray
-
-	// Editable cell style
-	editableStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("15")) // White
-
-	// Error message style
-	errorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("9")) // Red
+// game_window = lipgloss.NewStyle().
+//
+//	Padding(1, 2).
+//	Border(lipgloss.BlockBorder(), true)
 )

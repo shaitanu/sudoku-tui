@@ -3,40 +3,41 @@ package main
 import (
 	"strconv"
 
-	"github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
-// Cell represents a single cell in the Sudoku grid
 type cell struct {
 	value    int
 	editable bool
 }
 
-// Subgrid represents a 3x3 subgrid in the Sudoku grid
 type Subgrid struct {
 	cells [3][3]cell
 }
 
-// Model represents the game state
 type model struct {
-	grid    [3][3]Subgrid // 3x3 grid of subgrids
-	cursorX int           // Current X position of the cursor
-	cursorY int           // Current Y position of the cursor
-	message string        // Message to display (e.g., errors)
+	grid       [3][3]Subgrid // 3x3 grid of 3x3 subgrids
+	cursorX    int           // Current X position (0-8)
+	cursorY    int           // Current Y position (0-8)
+	message    string
+	emptycells int
 }
 
-// initialModel initializes the game with a sample Sudoku puzzle
 func initialModel() model {
 	m := model{}
 	sampleGrid := [9][9]int{
-		{5, 3, 0, 0, 7, 0, 0, 0, 0},
-		{6, 0, 0, 1, 9, 5, 0, 0, 0},
-		{0, 9, 8, 0, 0, 0, 0, 6, 0},
-		{8, 0, 0, 0, 6, 0, 0, 0, 3}, {4, 0, 0, 8, 0, 3, 0, 0, 1}, {7, 0, 0, 0, 2, 0, 0, 0, 6},
-		{0, 6, 0, 0, 0, 0, 2, 8, 0}, {0, 0, 0, 4, 1, 9, 0, 0, 5}, {0, 0, 0, 0, 8, 0, 0, 7, 9},
+		{5, 3, 4, 6, 7, 8, 9, 1, 2},
+		{6, 7, 2, 1, 9, 5, 3, 4, 8},
+		{1, 9, 8, 3, 4, 2, 5, 6, 7},
+		{8, 5, 9, 7, 6, 1, 4, 2, 3},
+		{4, 2, 6, 8, 5, 3, 7, 9, 1},
+		{7, 1, 3, 9, 2, 4, 8, 5, 6},
+		{9, 6, 1, 5, 3, 7, 2, 8, 4},
+		{2, 8, 7, 4, 1, 9, 6, 3, 5},
+		{3, 4, 5, 2, 8, 6, 0, 7, 9},
 	}
 
-	// Populate the grid with the sample puzzle
+	// Convert 9x9 grid to 3x3 subgrids
 	for y := 0; y < 9; y++ {
 		for x := 0; x < 9; x++ {
 			sgY := y / 3
@@ -44,36 +45,37 @@ func initialModel() model {
 			cellY := y % 3
 			cellX := x % 3
 
-			m.grid[sgX][sgY].cells[cellX][cellY] = cell{
-				value:    sampleGrid[x][y],
-				editable: sampleGrid[x][y] == 0,
+			if sampleGrid[y][x] == 0 {
+				m.emptycells++
+			}
+			m.grid[sgY][sgX].cells[cellY][cellX] = cell{
+				value:    sampleGrid[y][x],
+				editable: sampleGrid[y][x] == 0,
 			}
 		}
 	}
 	return m
 }
 
-// getCell retrieves the value of a cell at global coordinates (x, y)
-func (m model) getCell(x, y int) int {
-	sgY := y / 3
-	sgX := x / 3
-	cellY := y % 3
-	cellX := x % 3
-	return m.grid[sgY][sgX].cells[cellY][cellX].value
-}
-
-// isValid checks if a number can be placed at (x, y) without violating Sudoku rules
 func isValid(m model, x, y, num int) bool {
 	// Check row
 	for checkX := 0; checkX < 9; checkX++ {
-		if checkX != x && m.getCell(checkX, y) == num {
+		sgY := y / 3
+		sgX := checkX / 3
+		cellY := y % 3
+		cellX := checkX % 3
+		if checkX != x && m.grid[sgY][sgX].cells[cellY][cellX].value == num {
 			return false
 		}
 	}
 
 	// Check column
 	for checkY := 0; checkY < 9; checkY++ {
-		if checkY != y && m.getCell(x, checkY) == num {
+		sgY := checkY / 3
+		sgX := x / 3
+		cellY := checkY % 3
+		cellX := x % 3
+		if checkY != y && m.grid[sgY][sgX].cells[cellY][cellX].value == num {
 			return false
 		}
 	}
@@ -84,7 +86,7 @@ func isValid(m model, x, y, num int) bool {
 	for cy := 0; cy < 3; cy++ {
 		for cx := 0; cx < 3; cx++ {
 			if (sgY*3+cy == y) && (sgX*3+cx == x) {
-				continue // Skip current cell
+				continue
 			}
 			if m.grid[sgY][sgX].cells[cy][cx].value == num {
 				return false
@@ -94,12 +96,10 @@ func isValid(m model, x, y, num int) bool {
 	return true
 }
 
-// Init initializes the model (required by Bubble Tea)
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
-// Update handles user input and updates the model
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -111,17 +111,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursorY > 0 {
 				m.cursorY--
 			}
-
 		case "down", "j":
 			if m.cursorY < 8 {
 				m.cursorY++
 			}
-
 		case "left", "h":
 			if m.cursorX > 0 {
 				m.cursorX--
 			}
-
 		case "right", "l":
 			if m.cursorX < 8 {
 				m.cursorX++
@@ -136,8 +133,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.grid[sgY][sgX].cells[cellY][cellX].editable {
 				num, _ := strconv.Atoi(msg.String())
 				if isValid(m, m.cursorX, m.cursorY, num) {
+					if m.grid[sgY][sgX].cells[cellY][cellX].value == 0 {
+						m.emptycells--
+					}
 					m.grid[sgY][sgX].cells[cellY][cellX].value = num
 					m.message = ""
+
+					if m.emptycells == 0 {
+						m.message = "You Won!"
+					}
 				} else {
 					m.message = "Invalid move!"
 				}
@@ -150,6 +154,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cellX := m.cursorX % 3
 
 			if m.grid[sgY][sgX].cells[cellY][cellX].editable {
+				if m.grid[sgY][sgX].cells[cellY][cellX].value != 0 {
+					m.emptycells++
+				}
 				m.grid[sgY][sgX].cells[cellY][cellX].value = 0
 				m.message = ""
 			}
