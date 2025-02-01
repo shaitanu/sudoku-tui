@@ -24,17 +24,19 @@ type model struct {
 // initialModel initializes the game with a sample Sudoku puzzle
 func initialModel() model {
 	m := model{}
-	sampleGrid := [9][9]int{
-		{5, 3, 4, 6, 7, 8, 9, 1, 2},
-		{6, 7, 2, 1, 9, 5, 3, 4, 8},
-		{1, 9, 8, 3, 4, 2, 5, 6, 7},
-		{8, 5, 9, 7, 6, 1, 4, 2, 3},
-		{4, 2, 6, 8, 5, 3, 7, 9, 1},
-		{7, 1, 3, 9, 2, 4, 8, 5, 6},
-		{9, 6, 1, 5, 3, 7, 2, 8, 4},
-		{2, 8, 7, 4, 1, 9, 6, 3, 5},
-		{3, 4, 5, 2, 8, 6, 0, 7, 9}, // One empty cell
-	}
+	// sampleGrid := [9][9]int{
+	// 	{5, 3, 4, 6, 7, 8, 9, 1, 2},
+	// 	{6, 7, 2, 1, 9, 5, 3, 4, 8},
+	// 	{1, 9, 8, 3, 4, 2, 5, 6, 7},
+	// 	{8, 5, 9, 7, 6, 1, 4, 2, 3},
+	// 	{4, 2, 6, 8, 5, 3, 7, 9, 1},
+	// 	{7, 1, 3, 9, 2, 4, 8, 5, 6},
+	// 	{9, 6, 1, 5, 3, 7, 2, 8, 4},
+	// 	{2, 8, 7, 4, 1, 9, 6, 3, 5},
+	// 	{3, 4, 5, 2, 8, 6, 0, 7, 9}, // One empty cell
+	// }
+	var sampleGrid [9][9]int = generateSudoku()
+	removeNumbers((&sampleGrid), 5)
 
 	// Populate the grid with the sample puzzle
 	for y := 0; y < 9; y++ {
@@ -97,12 +99,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "up", "k":
-			if m.cursorY > 0 {
+			if m.cursorY > 1 {
 				m.cursorY--
 			}
 
 		case "down", "j":
-			if m.cursorY < 8 {
+			if m.cursorY < 9 {
 				m.cursorY++
 			}
 
@@ -116,14 +118,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursorX++
 			}
 
+			//due to header decrease y by -1
 		case "1", "2", "3", "4", "5", "6", "7", "8", "9":
-			if m.grid[m.cursorY][m.cursorX].editable {
+			if m.grid[m.cursorY-1][m.cursorX].editable {
 				num, _ := strconv.Atoi(msg.String())
-				if isValid(m, m.cursorX, m.cursorY, num) {
-					if m.grid[m.cursorY][m.cursorX].value == 0 {
+				if isValid(m, m.cursorX, m.cursorY-1, num) {
+					if m.grid[m.cursorY-1][m.cursorX].value == 0 {
 						m.emptycells-- // Decrease empty cell count
 					}
-					m.grid[m.cursorY][m.cursorX].value = num
+					m.grid[m.cursorY-1][m.cursorX].value = num
 					m.message = "" // Clear error message on valid move
 
 					if m.emptycells == 0 {
@@ -135,11 +138,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "0", " ":
-			if m.grid[m.cursorY][m.cursorX].editable {
-				if m.grid[m.cursorY][m.cursorX].value != 0 {
+			if m.grid[m.cursorY-1][m.cursorX].editable {
+				if m.grid[m.cursorY-1][m.cursorX].value != 0 {
 					m.emptycells++ // Increase empty cell count
 				}
-				m.grid[m.cursorY][m.cursorX].value = 0
+				m.grid[m.cursorY-1][m.cursorX].value = 0
 				m.message = ""
 			}
 		}
