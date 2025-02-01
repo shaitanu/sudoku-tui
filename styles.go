@@ -30,13 +30,12 @@ var (
 		BottomRight: "*",
 	}
 
-//	anotherStyle = lipgloss.NewStyle().
-//			BorderStyle(lipgloss.RoundedBorder()).
-//			Border(myCuteBorder, true, true, true, true).
-//			Align(lipgloss.Center).Margin(4, 4)
+	anotherStyle = lipgloss.NewStyle().
+			BorderStyle(lipgloss.RoundedBorder()).
+			Border(myCuteBorder, true, true, true, true).
+			Align(lipgloss.Center).Margin(4, 4)
 
-// game_window = lipgloss.NewStyle().
-//
-//	Padding(1, 2).
-//	Border(lipgloss.BlockBorder(), true)
+	game_window = lipgloss.NewStyle().
+			Padding(1, 2).
+			Border(lipgloss.BlockBorder(), true)
 )

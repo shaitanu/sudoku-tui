@@ -7,58 +7,56 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-	anotherStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-	game_window  = lipgloss.NewStyle().Padding(1, 2)
-	sudoku       = `███████ ██    ██ ██████   ██████  ██   ██ ██    ██
+var sudoku = `███████ ██    ██ ██████   ██████  ██   ██ ██    ██
 ██      ██    ██ ██   ██ ██    ██ ██  ██  ██    ██
 ███████ ██    ██ ██   ██ ██    ██ █████   ██    ██
      ██ ██    ██ ██   ██ ██    ██ ██  ██  ██    ██
 ███████  ██████  ██████   ██████  ██   ██  ██████`
-)
 
+// View renders the game UI
 func (m model) View() string {
 	var grid strings.Builder
 
-	// Logo
+	//logo
 	grid.WriteString(anotherStyle.Render(sudoku))
+
+	// Top border
 	grid.WriteString("\n+-------+-------+-------+\n")
 
 	for y := 0; y < 9; y++ {
-		sgY := y / 3
-		cellY := y % 3
+		// Add vertical separators between subgrids
 		grid.WriteString("| ")
-
 		for x := 0; x < 9; x++ {
-			sgX := x / 3
-			cellX := x % 3
-			c := m.grid[sgY][sgX].cells[cellY][cellX]
-
+			cell := m.grid[y][x]
 			value := " "
-			if c.value > 0 {
-				value = strconv.Itoa(c.value)
+			if cell.value > 0 {
+				value = strconv.Itoa(cell.value)
 			}
 
+			// Highlight the cursor
 			if x == m.cursorX && y == m.cursorY {
 				value = lipgloss.NewStyle().
-					Background(lipgloss.Color("62")).
-					Foreground(lipgloss.Color("230")).
+					Background(lipgloss.Color("62")).  // Purple
+					Foreground(lipgloss.Color("230")). // Light yellow
 					Render(value)
 			}
 
 			grid.WriteString(value + " ")
 
+			// Vertical separator every 3 columns
 			if (x+1)%3 == 0 {
 				grid.WriteString("| ")
 			}
 		}
 		grid.WriteString("\n")
 
+		// Horizontal separator every 3 rows
 		if (y+1)%3 == 0 {
 			grid.WriteString("+-------+-------+-------+\n")
 		}
 	}
 
+	// Add error message
 	if m.message != "" {
 		grid.WriteString("\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(m.message))
 	}
